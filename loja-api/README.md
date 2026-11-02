@@ -92,6 +92,11 @@ O seed apaga os dados existentes de pedidos, produtos e usuários antes de
 recriá-los. Execute-o apenas em um banco de desenvolvimento que possa ser
 reinicializado.
 
+### Autenticação
+
+- `GET /auth/me` exige `Authorization: Bearer <access_token>` e retorna
+  `userId`, `username` e `role` do usuário autenticado.
+
 ### Busca e atualização de produtos
 
 - `GET /products?q=caneca&minPrice=10&maxPrice=50` filtra produtos cujo nome
