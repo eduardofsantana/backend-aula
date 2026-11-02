@@ -94,8 +94,10 @@ reinicializado.
 
 ### Busca e atualização de produtos
 
-- `GET /products?q=caneca` lista produtos cujo nome contém `caneca`
-  (busca sem diferenciar maiúsculas de minúsculas).
+- `GET /products?q=caneca&minPrice=10&maxPrice=50` filtra produtos cujo nome
+  contém `caneca` e cujo preço está entre `10` e `50` (limites inclusivos;
+  busca sem diferenciar maiúsculas de minúsculas). Todos os filtros são
+  opcionais.
 - `PATCH /products/:id` atualiza somente os campos enviados no JSON e requer
   token de ADMIN. Por exemplo, `{"stock": 5}` altera apenas o estoque.
 - `PUT /products/:id` continua usando o DTO próprio de atualização.

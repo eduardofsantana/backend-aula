@@ -1,10 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import {
+  And,
+  FindOptionsWhere,
+  ILike,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { Product } from './product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { PatchProductDto } from './dto/patch-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import {
+  ListProductsQueryDto,
+  UpdateProductDto,
+} from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
@@ -13,15 +23,27 @@ export class ProductsService {
     private readonly productsRepository: Repository<Product>,
   ) {}
 
-  findAll(q?: string): Promise<Product[]> {
-    if (!q) {
+  findAll({ q, minPrice, maxPrice }: ListProductsQueryDto = {}): Promise<
+    Product[]
+  > {
+    if (!q && minPrice === undefined && maxPrice === undefined) {
       return this.productsRepository.find();
     }
 
-    const escapedQuery = q.replace(/[\\%_]/g, '\\$&');
-    return this.productsRepository.find({
-      where: { name: ILike(`%${escapedQuery}%`) },
-    });
+    const where: FindOptionsWhere<Product> = {};
+    if (q) {
+      const escapedQuery = q.replace(/[\\%_]/g, '\\$&');
+      where.name = ILike(`%${escapedQuery}%`);
+    }
+    if (minPrice !== undefined && maxPrice !== undefined) {
+      where.price = And(MoreThanOrEqual(minPrice), LessThanOrEqual(maxPrice));
+    } else if (minPrice !== undefined) {
+      where.price = MoreThanOrEqual(minPrice);
+    } else if (maxPrice !== undefined) {
+      where.price = LessThanOrEqual(maxPrice);
+    }
+
+    return this.productsRepository.find({ where });
   }
 
   async findOne(id: number): Promise<Product> {

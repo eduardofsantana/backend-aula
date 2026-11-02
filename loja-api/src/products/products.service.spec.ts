@@ -21,7 +21,7 @@ describe('ProductsService', () => {
   it('filters product names by case-insensitive substring', async () => {
     productsRepository.find.mockResolvedValue([]);
 
-    await service.findAll('Caneca');
+    await service.findAll({ q: 'Caneca' });
 
     expect(productsRepository.find).toHaveBeenCalledWith({
       where: { name: ILike('%Caneca%') },
@@ -31,14 +31,44 @@ describe('ProductsService', () => {
   it('escapes wildcard characters in the search term', async () => {
     productsRepository.find.mockResolvedValue([]);
 
-    await service.findAll('100%_');
+    await service.findAll({ q: '100%_' });
 
     const options = productsRepository.find.mock.calls[0][0];
-    const nameFilter = options.where && !Array.isArray(options.where)
-      ? options.where.name
-      : undefined;
+    const nameFilter =
+      options.where && !Array.isArray(options.where)
+        ? options.where.name
+        : undefined;
     expect(nameFilter).toBeInstanceOf(Object);
     expect(nameFilter).toMatchObject({ _type: 'ilike', _value: '%100\\%\\_%' });
+  });
+
+  it('filters by inclusive minimum and maximum prices', async () => {
+    productsRepository.find.mockResolvedValue([]);
+
+    await service.findAll({ minPrice: 10, maxPrice: 50 });
+
+    const options = productsRepository.find.mock.calls[0][0];
+    expect(options.where).toMatchObject({
+      price: {
+        _type: 'and',
+        _value: [
+          { _type: 'moreThanOrEqual', _value: 10 },
+          { _type: 'lessThanOrEqual', _value: 50 },
+        ],
+      },
+    });
+  });
+
+  it('combines name and price filters', async () => {
+    productsRepository.find.mockResolvedValue([]);
+
+    await service.findAll({ q: 'Caneca', minPrice: 10 });
+
+    const options = productsRepository.find.mock.calls[0][0];
+    expect(options.where).toMatchObject({
+      name: { _type: 'ilike', _value: '%Caneca%' },
+      price: { _type: 'moreThanOrEqual', _value: 10 },
+    });
   });
 
   it('updates only fields provided to patch', async () => {

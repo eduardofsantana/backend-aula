@@ -24,6 +24,7 @@ import { basename, extname, join } from 'path';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -32,7 +33,10 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateProductDto } from './dto/create-product.dto';
 import { PatchProductDto } from './dto/patch-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import {
+  ListProductsQueryDto,
+  UpdateProductDto,
+} from './dto/update-product.dto';
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -42,9 +46,12 @@ export class ProductsController {
 
   @Get()
   @ApiOperation({ summary: 'Listar produtos' })
+  @ApiQuery({ name: 'q', required: false, type: String })
+  @ApiQuery({ name: 'minPrice', required: false, type: Number })
+  @ApiQuery({ name: 'maxPrice', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Lista de produtos' })
-  findAll(@Query('q') q?: string) {
-    return this.productsService.findAll(q);
+  findAll(@Query() query: ListProductsQueryDto) {
+    return this.productsService.findAll(query);
   }
 
   @Post(':id/image')
@@ -179,10 +186,7 @@ export class ProductsController {
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  patch(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: PatchProductDto,
-  ) {
+  patch(@Param('id', ParseIntPipe) id: number, @Body() dto: PatchProductDto) {
     return this.productsService.patch(id, dto);
   }
 

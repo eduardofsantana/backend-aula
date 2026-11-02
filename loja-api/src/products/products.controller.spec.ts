@@ -65,7 +65,8 @@ describe('ProductsController', () => {
       stock: 5,
     });
 
-    await controller.findAll('notebook');
-    expect(productsService.findAll).toHaveBeenCalledWith('notebook');
+    const query = { q: 'notebook', minPrice: 100, maxPrice: 3000 };
+    await controller.findAll(query);
+    expect(productsService.findAll).toHaveBeenCalledWith(query);
   });
 });
