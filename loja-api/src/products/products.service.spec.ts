@@ -4,6 +4,7 @@ jest.mock('@nestjs/typeorm', () => ({
 
 import { ILike, Repository } from 'typeorm';
 import { Category } from '../categories/category.entity';
+import { ProductImage } from './product-image.entity';
 import { Product } from './product.entity';
 import { ProductsService } from './products.service';
 
@@ -16,7 +17,18 @@ describe('ProductsService', () => {
   const categoriesRepository = {
     findOne: jest.fn(),
   } as unknown as jest.Mocked<Repository<Category>>;
-  const service = new ProductsService(productsRepository, categoriesRepository);
+  const productImagesRepository = {
+    create: jest.fn((image) => image),
+    save: jest.fn(),
+    find: jest.fn(),
+    findOne: jest.fn(),
+    delete: jest.fn(),
+  } as unknown as jest.Mocked<Repository<ProductImage>>;
+  const service = new ProductsService(
+    productsRepository,
+    categoriesRepository,
+    productImagesRepository,
+  );
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -151,5 +163,46 @@ describe('ProductsService', () => {
     await expect(service.updateCategory(1, 404)).rejects.toThrow(
       'Categoria 404 não encontrada',
     );
+  });
+
+  it('stores metadata for multiple product images', async () => {
+    productsRepository.findOne.mockResolvedValue({ id: 1 } as Product);
+    const records = [
+      { id: 1, productId: 1, filename: 'one.jpg' },
+      { id: 2, productId: 1, filename: 'two.png' },
+    ] as ProductImage[];
+    productImagesRepository.save.mockResolvedValue(records as never);
+
+    await expect(
+      service.addImages(1, [
+        {
+          filename: 'one.jpg',
+          mimeType: 'image/jpeg',
+          size: 100,
+          originalName: 'one.jpg',
+        },
+        {
+          filename: 'two.png',
+          mimeType: 'image/png',
+          size: 200,
+          originalName: 'two.png',
+        },
+      ]),
+    ).resolves.toBe(records);
+    expect(productImagesRepository.save).toHaveBeenCalledWith([
+      expect.objectContaining({ productId: 1, filename: 'one.jpg' }),
+      expect.objectContaining({ productId: 1, filename: 'two.png' }),
+    ]);
+  });
+
+  it('does not return an image belonging to another product', async () => {
+    productImagesRepository.findOne.mockResolvedValue(null);
+
+    await expect(service.findImage(1, 9)).rejects.toThrow(
+      'Imagem 9 não encontrada no produto 1',
+    );
+    expect(productImagesRepository.findOne).toHaveBeenCalledWith({
+      where: { id: 9, productId: 1 },
+    });
   });
 });

@@ -117,6 +117,15 @@ reinicializado.
 - O papel `MANAGER` pode atualizar produtos via `PUT` e consultar todos os
   pedidos, mas não pode excluir produtos nem cancelar pedidos de outros
   usuários. Escritas em `/categories` continuam exclusivas de `ADMIN`.
+- Imagens adicionais de produtos ficam na tabela `product_images`, relacionadas
+  por FK com exclusão em cascata quando o produto é removido. Envie até 5
+  arquivos por requisição em `POST /products/:id/images`, usando o campo
+  multipart `files`. São aceitos JPEG, PNG e WebP, com até 2 MB por arquivo;
+  o MIME declarado e a assinatura do conteúdo são verificados.
+- `GET /products/:id/images` lista os metadados, `GET
+  /products/:id/images/:imageId/file` entrega o arquivo e `DELETE
+  /products/:id/images/:imageId` o remove (ADMIN). O endpoint legado de
+  imagem única (`/products/:id/image`) continua disponível.
 
 ## Deployment
 

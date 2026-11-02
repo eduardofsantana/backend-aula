@@ -5,9 +5,13 @@ import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 import { Product } from './product.entity';
 import { Category } from '../categories/category.entity';
+import { ProductImage } from './product-image.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, Category]), AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([Product, ProductImage, Category]),
+    AuthModule,
+  ],
   controllers: [ProductsController],
   providers: [ProductsService],
   exports: [ProductsService], // necessário se outro módulo (ex.: CatalogService no Desafio A) injetar o service

@@ -23,4 +23,12 @@ describe('product and category route roles', () => {
       ).toEqual(['ADMIN']);
     }
   });
+
+  it('keeps product image upload and delete routes ADMIN-only', () => {
+    for (const route of ['uploadImages', 'deleteProductImage'] as const) {
+      expect(
+        Reflect.getMetadata(ROLES_KEY, ProductsController.prototype[route]),
+      ).toEqual(['ADMIN']);
+    }
+  });
 });
