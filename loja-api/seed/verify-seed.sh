@@ -1,34 +1,24 @@
 #!/usr/bin/env bash
 # Verifica se o hash bcrypt em seed.sql corresponde à senha secret123.
-# Uso: a partir de backend/nest/ → bash seed/verify-seed.sh
+# Uso: bash seed/verify-seed.sh (a partir de loja-api/)
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
-HASH="$(grep -oE '\$2b\$10\$[[:alnum:]./]+' "$DIR/seed.sql" | head -1)"
+PROJECT_DIR="$(cd "$DIR/.." && pwd)"
+HASH="$(grep -oE '\$2b\$10\$[[:alnum:]./]+' "$DIR/seed.sql" | sed -n '1p')"
 
 if [[ -z "$HASH" ]]; then
   echo "FALHA: nenhum hash \$2b\$10\$ encontrado em seed.sql" >&2
   exit 1
 fi
 
-# npm exec resolve módulos a partir do cwd. Em pastas sem package.json
-# (ex.: backend/nest/) o pacote não fica acessível ao `node -e` — por isso
-# rodamos em um diretório temporário.
-WORKDIR="$(mktemp -d)"
-cleanup() { rm -rf "$WORKDIR"; }
-trap cleanup EXIT
-
 export SEED_HASH="$HASH"
-(
-  cd "$WORKDIR"
-  npm exec --yes --package=bcryptjs -- node -e "
-const bcrypt = require('bcryptjs');
-bcrypt.compare('secret123', process.env.SEED_HASH).then((ok) => {
-  if (!ok) {
-    console.error('FALHA: hash em seed.sql não corresponde a secret123');
-    process.exit(1);
-  }
-  console.log('OK: seed.sql verificado (ana/cli → secret123)');
-});
-"
-)
+cd "$PROJECT_DIR"
+node -e '
+const bcrypt = require("bcryptjs");
+if (!bcrypt.compareSync("secret123", process.env.SEED_HASH)) {
+  console.error("FALHA: hash em seed.sql não corresponde a secret123");
+  process.exit(1);
+}
+console.log("OK: seed.sql verificado (ana/cli/mgr → secret123)");
+'

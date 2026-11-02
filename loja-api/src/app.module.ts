@@ -16,7 +16,7 @@ import { AuthModule } from './auth/auth.module';
     useFactory: (config: ConfigService) => ({
       type: 'postgres',
       host: config.get('DB_HOST'),
-      port: config.get('DB_PORT'),
+      port: Number(config.get('DB_PORT', '5432')),
       username: config.get('DB_USERNAME'),
       password: config.get('DB_PASSWORD'),
       database: config.get('DB_DATABASE'),

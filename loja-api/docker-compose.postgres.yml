@@ -11,10 +11,48 @@ services:
     volumes:
       - loja_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U loja -d loja"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: loja-api
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-loja}
+      DB_PASSWORD: ${DB_PASSWORD:-loja}
+      DB_DATABASE: ${DB_DATABASE:-loja}
+      JWT_SECRET: ${JWT_SECRET:-local-development-only-secret-change-me}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+    ports:
+      - "3000:3000"
+    volumes:
+      - loja_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   pgadmin:
     # Pin major 8 — evite :latest (UI e env vars mudam entre aulas)
@@ -38,3 +76,4 @@ services:
 volumes:
   loja_pg_data:
   loja_pgadmin_data:
+  loja_uploads:
