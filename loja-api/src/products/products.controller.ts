@@ -33,6 +33,7 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateProductDto } from './dto/create-product.dto';
 import { PatchProductDto } from './dto/patch-product.dto';
+import { UpdateProductCategoryDto } from './dto/update-product-category.dto';
 import {
   ListProductsQueryDto,
   UpdateProductDto,
@@ -188,6 +189,22 @@ export class ProductsController {
   @Roles('ADMIN')
   patch(@Param('id', ParseIntPipe) id: number, @Body() dto: PatchProductDto) {
     return this.productsService.patch(id, dto);
+  }
+
+  @Patch(':id/category')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Associar ou remover categoria do produto (ADMIN)' })
+  @ApiResponse({
+    status: 404,
+    description: 'Produto ou categoria não encontrado',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  updateCategory(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateProductCategoryDto,
+  ) {
+    return this.productsService.updateCategory(id, dto.categoryId);
   }
 
   @Delete(':id')

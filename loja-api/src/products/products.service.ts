@@ -8,6 +8,7 @@ import {
   MoreThanOrEqual,
   Repository,
 } from 'typeorm';
+import { Category } from '../categories/category.entity';
 import { Product } from './product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { PatchProductDto } from './dto/patch-product.dto';
@@ -21,6 +22,8 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
+    @InjectRepository(Category)
+    private readonly categoriesRepository: Repository<Category>,
   ) {}
 
   findAll({ q, minPrice, maxPrice }: ListProductsQueryDto = {}): Promise<
@@ -65,6 +68,31 @@ export class ProductsService {
 
   async patch(id: number, dto: PatchProductDto): Promise<Product> {
     return this.saveChanges(id, dto);
+  }
+
+  async updateCategory(
+    id: number,
+    categoryId: number | null,
+  ): Promise<Product> {
+    const product = await this.findOne(id);
+    if (categoryId === null) {
+      product.category = null;
+      product.categoryId = null;
+    } else {
+      const category = await this.categoriesRepository.findOne({
+        where: { id: categoryId },
+      });
+      if (!category) {
+        throw new NotFoundException(`Categoria ${categoryId} não encontrada`);
+      }
+      product.category = category;
+      product.categoryId = category.id;
+    }
+    return this.productsRepository.save(product);
+  }
+
+  findByCategoryId(categoryId: number): Promise<Product[]> {
+    return this.productsRepository.find({ where: { categoryId } });
   }
 
   private async saveChanges(

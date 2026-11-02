@@ -3,6 +3,7 @@ jest.mock('@nestjs/typeorm', () => ({
 }));
 
 import { ILike, Repository } from 'typeorm';
+import { Category } from '../categories/category.entity';
 import { Product } from './product.entity';
 import { ProductsService } from './products.service';
 
@@ -12,7 +13,10 @@ describe('ProductsService', () => {
     findOne: jest.fn(),
     save: jest.fn(),
   } as unknown as jest.Mocked<Repository<Product>>;
-  const service = new ProductsService(productsRepository);
+  const categoriesRepository = {
+    findOne: jest.fn(),
+  } as unknown as jest.Mocked<Repository<Category>>;
+  const service = new ProductsService(productsRepository, categoriesRepository);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -78,6 +82,8 @@ describe('ProductsService', () => {
       price: 39.9,
       stock: 10,
       imageFilename: null,
+      categoryId: null,
+      category: null,
     };
     productsRepository.findOne.mockResolvedValue(existingProduct);
     productsRepository.save.mockImplementation(async () => existingProduct);
@@ -91,5 +97,59 @@ describe('ProductsService', () => {
       stock: 4,
       imageFilename: null,
     });
+  });
+
+  it('associates a product with an existing category', async () => {
+    const category = { id: 2, name: 'Canecas' } as Category;
+    const product: Product = {
+      id: 1,
+      name: 'Caneca Nest',
+      price: 39.9,
+      stock: 10,
+      imageFilename: null,
+      categoryId: null,
+      category: null,
+    };
+    productsRepository.findOne.mockResolvedValue(product);
+    categoriesRepository.findOne.mockResolvedValue(category);
+    productsRepository.save.mockImplementation(async () => product);
+
+    await service.updateCategory(1, 2);
+
+    expect(product.categoryId).toBe(2);
+    expect(product.category).toBe(category);
+    expect(productsRepository.save).toHaveBeenCalledWith(product);
+  });
+
+  it('removes a product category when categoryId is null', async () => {
+    const product: Product = {
+      id: 1,
+      name: 'Caneca Nest',
+      price: 39.9,
+      stock: 10,
+      imageFilename: null,
+      categoryId: 2,
+      category: { id: 2, name: 'Canecas' } as Category,
+    };
+    productsRepository.findOne.mockResolvedValue(product);
+    productsRepository.save.mockImplementation(async () => product);
+
+    await service.updateCategory(1, null);
+
+    expect(product.categoryId).toBeNull();
+    expect(product.category).toBeNull();
+  });
+
+  it('rejects associations to a missing category', async () => {
+    productsRepository.findOne.mockResolvedValue({
+      id: 1,
+      categoryId: null,
+      category: null,
+    } as Product);
+    categoriesRepository.findOne.mockResolvedValue(null);
+
+    await expect(service.updateCategory(1, 404)).rejects.toThrow(
+      'Categoria 404 não encontrada',
+    );
   });
 });

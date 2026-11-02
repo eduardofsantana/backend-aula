@@ -104,6 +104,11 @@ reinicializado.
 - `GET /catalog/summary` retorna a quantidade de produtos e a soma das
   unidades em estoque, por meio do `CatalogService` que injeta o
   `ProductsService`.
+- `GET /categories` lista categorias; `POST /categories`, `PUT/PATCH /categories/:id`
+  e `DELETE /categories/:id` fazem o CRUD (escrita só ADMIN).
+- `GET /categories/:id/products` lista produtos da categoria.
+- `PATCH /products/:id/category` recebe `{"categoryId": 1}` para associar uma
+  categoria ou `{"categoryId": null}` para remover a associação (só ADMIN).
 
 ## Deployment
 

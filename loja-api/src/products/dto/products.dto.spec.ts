@@ -1,6 +1,7 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { PatchProductDto } from './patch-product.dto';
+import { UpdateProductCategoryDto } from './update-product-category.dto';
 import { ListProductsQueryDto } from './update-product.dto';
 
 describe('product DTOs', () => {
@@ -48,5 +49,15 @@ describe('product DTOs', () => {
 
     expect(patch.stock).toBe(5);
     expect(await validate(patch)).toHaveLength(0);
+  });
+
+  it('accepts a null category id to clear the product category', async () => {
+    const dto = plainToInstance(UpdateProductCategoryDto, { categoryId: null });
+    expect(await validate(dto)).toHaveLength(0);
+  });
+
+  it('requires categoryId when updating product category', async () => {
+    const dto = plainToInstance(UpdateProductCategoryDto, {});
+    expect(await validate(dto)).not.toHaveLength(0);
   });
 });
