@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: loja-postgres
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-loja}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-loja}
+      POSTGRES_DB: ${DB_DATABASE:-loja}
+    ports:
+      - "5432:5432"
+    volumes:
+      - loja_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loja -d loja"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    # Pin major 8 — evite :latest (UI e env vars mudam entre aulas)
+    image: dpage/pgadmin4:8
+    container_name: loja-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@loja.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_LISTEN_PORT: 5050
+      PGADMIN_CONFIG_PROXY_X_HOST_COUNT: 1
+      PGADMIN_CONFIG_PROXY_X_PREFIX_COUNT: 1
+    ports:
+      - "5050:5050"
+    volumes:
+      - loja_pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  loja_pg_data:
+  loja_pgadmin_data:
