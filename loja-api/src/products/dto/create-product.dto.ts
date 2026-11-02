@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsNumber, IsString, Min, MinLength } from 'class-validator';
 
 export class CreateProductDto {
-  @ApiProperty({ example: 'Caneca Nest', minLength: 2 })
+  @ApiProperty({ example: 'Caneca Nest', minLength: 2, maxLength: 255 })
   @IsString({ message: 'name deve ser um texto' })
   @MinLength(2, { message: 'Informe um nome com pelo menos 2 caracteres' })
   name: string;

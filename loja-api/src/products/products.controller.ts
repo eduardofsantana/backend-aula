@@ -23,14 +23,20 @@ import { createReadStream, existsSync, unlinkSync } from 'fs';
 import { basename, extname, join } from 'path';
 import {
   ApiBearerAuth,
+  ApiExtraModels,
+  ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
+import { ApiValidationErrorResponse } from '../common/swagger/api-validation-error-response.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { Product } from './product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { PatchProductDto } from './dto/patch-product.dto';
 import { UpdateProductCategoryDto } from './dto/update-product-category.dto';
@@ -42,6 +48,7 @@ import { ProductsService } from './products.service';
 
 @Controller('products')
 @ApiTags('products')
+@ApiExtraModels(Product)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
@@ -50,13 +57,19 @@ export class ProductsController {
   @ApiQuery({ name: 'q', required: false, type: String })
   @ApiQuery({ name: 'minPrice', required: false, type: Number })
   @ApiQuery({ name: 'maxPrice', required: false, type: Number })
+  @ApiValidationErrorResponse('minPrice não pode ser negativo')
   @ApiResponse({ status: 200, description: 'Lista de produtos' })
+  @ApiOkResponse({
+    schema: { type: 'array', items: { $ref: getSchemaPath(Product) } },
+  })
   findAll(@Query() query: ListProductsQueryDto) {
     return this.productsService.findAll(query);
   }
 
   @Post(':id/image')
   @HttpCode(200)
+  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiValidationErrorResponse('envie o campo file (jpeg/png/webp)')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @UseInterceptors(
@@ -97,6 +110,8 @@ export class ProductsController {
   }
 
   @Get(':id/image')
+  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiValidationErrorResponse('Validation failed (numeric string is expected)')
   async getImage(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<StreamableFile> {
@@ -118,6 +133,8 @@ export class ProductsController {
   @Delete(':id/image')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Remover imagem do produto (ADMIN)' })
+  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiValidationErrorResponse('Validation failed (numeric string is expected)')
   @ApiResponse({ status: 204, description: 'Imagem removida' })
   @ApiResponse({ status: 401, description: 'Sem token' })
   @ApiResponse({ status: 403, description: 'Papel insuficiente' })
@@ -144,7 +161,10 @@ export class ProductsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar produto por ID' })
+  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiValidationErrorResponse('Validation failed (numeric string is expected)')
   @ApiResponse({ status: 200, description: 'Produto encontrado' })
+  @ApiOkResponse({ schema: { $ref: getSchemaPath(Product) } })
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.findOne(Number(id));
@@ -156,6 +176,12 @@ export class ProductsController {
   @ApiResponse({ status: 201, description: 'Criado' })
   @ApiResponse({ status: 401, description: 'Sem token' })
   @ApiResponse({ status: 403, description: 'Papel insuficiente' })
+  @ApiValidationErrorResponse('Informe um nome com pelo menos 2 caracteres')
+  @ApiResponse({
+    status: 201,
+    description: 'Produto criado',
+    schema: { $ref: getSchemaPath(Product) },
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   create(@Body() dto: CreateProductDto) {
@@ -169,6 +195,9 @@ export class ProductsController {
   @ApiResponse({ status: 401, description: 'Sem token' })
   @ApiResponse({ status: 403, description: 'Papel insuficiente' })
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
+  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiValidationErrorResponse('Informe um nome com pelo menos 2 caracteres')
+  @ApiOkResponse({ schema: { $ref: getSchemaPath(Product) } })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'MANAGER')
   update(
@@ -185,6 +214,9 @@ export class ProductsController {
   @ApiResponse({ status: 401, description: 'Sem token' })
   @ApiResponse({ status: 403, description: 'Papel insuficiente' })
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
+  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiValidationErrorResponse('Informe um nome com pelo menos 2 caracteres')
+  @ApiOkResponse({ schema: { $ref: getSchemaPath(Product) } })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   patch(@Param('id', ParseIntPipe) id: number, @Body() dto: PatchProductDto) {
@@ -198,6 +230,9 @@ export class ProductsController {
     status: 404,
     description: 'Produto ou categoria não encontrado',
   })
+  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiValidationErrorResponse('categoryId deve ser maior que zero')
+  @ApiOkResponse({ schema: { $ref: getSchemaPath(Product) } })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   updateCategory(
@@ -214,6 +249,8 @@ export class ProductsController {
   @ApiResponse({ status: 401, description: 'Sem token' })
   @ApiResponse({ status: 403, description: 'Papel insuficiente' })
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
+  @ApiParam({ name: 'id', type: Number, example: 1 })
+  @ApiValidationErrorResponse('Validation failed (numeric string is expected)')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @HttpCode(204)
