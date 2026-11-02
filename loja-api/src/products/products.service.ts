@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Product } from './product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
+import { PatchProductDto } from './dto/patch-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
@@ -12,8 +13,15 @@ export class ProductsService {
     private readonly productsRepository: Repository<Product>,
   ) {}
 
-  findAll(): Promise<Product[]> {
-    return this.productsRepository.find();
+  findAll(q?: string): Promise<Product[]> {
+    if (!q) {
+      return this.productsRepository.find();
+    }
+
+    const escapedQuery = q.replace(/[\\%_]/g, '\\$&');
+    return this.productsRepository.find({
+      where: { name: ILike(`%${escapedQuery}%`) },
+    });
   }
 
   async findOne(id: number): Promise<Product> {
@@ -30,6 +38,17 @@ export class ProductsService {
   }
 
   async update(id: number, dto: UpdateProductDto): Promise<Product> {
+    return this.saveChanges(id, dto);
+  }
+
+  async patch(id: number, dto: PatchProductDto): Promise<Product> {
+    return this.saveChanges(id, dto);
+  }
+
+  private async saveChanges(
+    id: number,
+    dto: Partial<Pick<Product, 'name' | 'price' | 'stock'>>,
+  ): Promise<Product> {
     const product = await this.findOne(id);
     Object.assign(product, dto);
     return this.productsRepository.save(product);

@@ -22,6 +22,11 @@ describe('ProductsController', () => {
     const productsService = {
       create: jest.fn().mockResolvedValue(createdProduct),
       update: jest.fn().mockResolvedValue(updatedProduct),
+      findAll: jest.fn().mockResolvedValue([createdProduct]),
+      patch: jest.fn().mockResolvedValue({
+        ...createdProduct,
+        stock: 5,
+      }),
     } as unknown as ProductsService;
     const controller = new ProductsController(productsService);
 
@@ -50,5 +55,17 @@ describe('ProductsController', () => {
       price: 3200,
       stock: 5,
     });
+
+    const patched = await controller.patch(1, { stock: 5 });
+    expect(productsService.patch).toHaveBeenCalledWith(1, { stock: 5 });
+    expect(patched).toMatchObject({
+      id: 1,
+      name: 'Notebook',
+      price: 2500,
+      stock: 5,
+    });
+
+    await controller.findAll('notebook');
+    expect(productsService.findAll).toHaveBeenCalledWith('notebook');
   });
 });

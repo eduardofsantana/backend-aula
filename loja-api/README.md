@@ -92,6 +92,14 @@ O seed apaga os dados existentes de pedidos, produtos e usuários antes de
 recriá-los. Execute-o apenas em um banco de desenvolvimento que possa ser
 reinicializado.
 
+### Busca e atualização de produtos
+
+- `GET /products?q=caneca` lista produtos cujo nome contém `caneca`
+  (busca sem diferenciar maiúsculas de minúsculas).
+- `PATCH /products/:id` atualiza somente os campos enviados no JSON e requer
+  token de ADMIN. Por exemplo, `{"stock": 5}` altera apenas o estoque.
+- `PUT /products/:id` continua usando o DTO próprio de atualização.
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.

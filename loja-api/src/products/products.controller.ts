@@ -7,6 +7,7 @@ import {
   HttpCode,
   NotFoundException,
   Param,
+  Patch,
   ParseIntPipe,
   Post,
   Put,
@@ -30,10 +31,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateProductDto } from './dto/create-product.dto';
-import {
-  ListProductsQueryDto,
-  UpdateProductDto,
-} from './dto/update-product.dto';
+import { PatchProductDto } from './dto/patch-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -44,8 +43,8 @@ export class ProductsController {
   @Get()
   @ApiOperation({ summary: 'Listar produtos' })
   @ApiResponse({ status: 200, description: 'Lista de produtos' })
-  findAll(@Query() _query?: ListProductsQueryDto) {
-    return this.productsService.findAll();
+  findAll(@Query('q') q?: string) {
+    return this.productsService.findAll(q);
   }
 
   @Post(':id/image')
@@ -169,6 +168,22 @@ export class ProductsController {
     @Body() dto: UpdateProductDto,
   ) {
     return this.productsService.update(Number(id), dto);
+  }
+
+  @Patch(':id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Atualizar campos enviados do produto (ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Produto atualizado parcialmente' })
+  @ApiResponse({ status: 401, description: 'Sem token' })
+  @ApiResponse({ status: 403, description: 'Papel insuficiente' })
+  @ApiResponse({ status: 404, description: 'Produto não encontrado' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  patch(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: PatchProductDto,
+  ) {
+    return this.productsService.patch(id, dto);
   }
 
   @Delete(':id')
