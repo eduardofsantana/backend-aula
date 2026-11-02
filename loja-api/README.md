@@ -114,6 +114,9 @@ reinicializado.
 - `GET /categories/:id/products` lista produtos da categoria.
 - `PATCH /products/:id/category` recebe `{"categoryId": 1}` para associar uma
   categoria ou `{"categoryId": null}` para remover a associação (só ADMIN).
+- O papel `MANAGER` pode atualizar produtos via `PUT` e consultar todos os
+  pedidos, mas não pode excluir produtos nem cancelar pedidos de outros
+  usuários. Escritas em `/categories` continuam exclusivas de `ADMIN`.
 
 ## Deployment
 

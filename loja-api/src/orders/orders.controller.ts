@@ -39,7 +39,7 @@ export class OrdersController {
 
 	@Get()
 	@ApiBearerAuth()
-	@ApiOperation({ summary: 'Listar pedidos do usuário (ou todos para ADMIN)' })
+	@ApiOperation({ summary: 'Listar pedidos do usuário (ou todos para ADMIN/MANAGER)' })
 	@ApiResponse({ status: 200, description: 'Lista de pedidos' })
 	@ApiResponse({ status: 401, description: 'Sem token' })
 	@UseGuards(JwtAuthGuard)
@@ -49,7 +49,7 @@ export class OrdersController {
 
 	@Get(':id')
 	@ApiBearerAuth()
-	@ApiOperation({ summary: 'Buscar pedido por ID (dono ou ADMIN)' })
+	@ApiOperation({ summary: 'Buscar pedido por ID (dono, ADMIN ou MANAGER)' })
 	@ApiResponse({ status: 200, description: 'Pedido encontrado' })
 	@ApiResponse({ status: 401, description: 'Sem token' })
 	@ApiResponse({ status: 404, description: 'Pedido não encontrado' })

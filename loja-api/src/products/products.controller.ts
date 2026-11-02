@@ -164,13 +164,13 @@ export class ProductsController {
 
   @Put(':id')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Atualizar produto (ADMIN)' })
+  @ApiOperation({ summary: 'Atualizar produto (ADMIN ou MANAGER)' })
   @ApiResponse({ status: 200, description: 'Produto atualizado' })
   @ApiResponse({ status: 401, description: 'Sem token' })
   @ApiResponse({ status: 403, description: 'Papel insuficiente' })
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'MANAGER')
   update(
     @Param('id', ParseIntPipe) id: number | string,
     @Body() dto: UpdateProductDto,

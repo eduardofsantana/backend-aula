@@ -47,7 +47,7 @@ export class OrdersService {
     }
 
     findAllForActor(userId: number, role: string): Promise<Order[]> {
-        if (role === 'ADMIN') {
+        if (role === 'ADMIN' || role === 'MANAGER') {
             return this.findAll();
         }
         return this.findAllForUser(userId);
@@ -67,7 +67,7 @@ export class OrdersService {
         role: string,
     ): Promise<Order> {
         const order = await this.findOne(id);
-        if (role !== 'ADMIN' && order.userId !== userId) {
+        if (role !== 'ADMIN' && role !== 'MANAGER' && order.userId !== userId) {
             throw new NotFoundException(`Pedido ${id} não encontrado`);
         }
         return order;
@@ -84,7 +84,10 @@ export class OrdersService {
         userId: number,
         role: string,
     ): Promise<Order> {
-        await this.findOneForActor(id, userId, role);
+        const order = await this.findOne(id);
+        if (role !== 'ADMIN' && order.userId !== userId) {
+            throw new NotFoundException(`Pedido ${id} não encontrado`);
+        }
         return this.cancel(id);
     }
 }
