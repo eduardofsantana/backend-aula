@@ -26,37 +26,71 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Project setup
+## Executar com Docker
 
 ```bash
-$ npm install
+docker compose -f docker-compose.postgres.yml up --build
 ```
 
-## Compile and run the project
+Esse comando sobe a API (`http://localhost:3000`), o PostgreSQL e o pgAdmin
+(`http://localhost:5050`). A documentação Swagger fica em
+`http://localhost:3000/api`; a verificação de saúde fica em
+`http://localhost:3000/health`.
+
+Para parar os serviços, mantendo os dados do banco:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker compose -f docker-compose.postgres.yml down
 ```
 
-## Run tests
+Para apagar também os dados persistidos do banco, use `down -v`.
+
+O Compose usa os valores de `.env` quando disponíveis. Para desenvolvimento
+local, crie esse arquivo a partir do exemplo:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+test -f .env || cp .env.example .env
 ```
+
+Os valores de JWT incluídos no exemplo e os padrões do Compose são somente
+para desenvolvimento. Configure um `JWT_SECRET` forte antes de qualquer uso
+fora da máquina local.
+
+## Executar localmente
+
+Requer Node.js 20 ou superior e Docker com o plugin Compose.
+
+```bash
+npm ci
+test -f .env || cp .env.example .env
+docker compose -f docker-compose.postgres.yml up -d postgres pgadmin
+npm run start:dev
+```
+
+## Testes e build
+
+```bash
+npm run test
+npm run test:e2e
+npm run build
+```
+
+O TypeORM cria/atualiza as tabelas automaticamente durante a inicialização
+(configuração de desenvolvimento). O script `seed/seed.sql` é opcional e deve
+ser executado depois que a API tiver criado as tabelas.
+
+### Usuários do seed
+
+| Papel | Login | Senha |
+|---|---|---|
+| Administrador (`ADMIN`) | `ana` | `secret123` |
+| Cliente (`CLIENT`) | `cli` | `secret123` |
+| Gerente (`MANAGER`) | `mgr` | `secret123` |
+| Visitante | — | Sem cadastro, role ou token; acessa somente rotas públicas |
+
+O seed apaga os dados existentes de pedidos, produtos e usuários antes de
+recriá-los. Execute-o apenas em um banco de desenvolvimento que possa ser
+reinicializado.
 
 ## Deployment
 
