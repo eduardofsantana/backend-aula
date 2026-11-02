@@ -101,6 +101,9 @@ reinicializado.
 - `PATCH /products/:id` atualiza somente os campos enviados no JSON e requer
   token de ADMIN. Por exemplo, `{"stock": 5}` altera apenas o estoque.
 - `PUT /products/:id` continua usando o DTO próprio de atualização.
+- `GET /catalog/summary` retorna a quantidade de produtos e a soma das
+  unidades em estoque, por meio do `CatalogService` que injeta o
+  `ProductsService`.
 
 ## Deployment
 
