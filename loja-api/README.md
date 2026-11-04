@@ -1,168 +1,188 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Loja API - E-commerce NestJS & TypeORM
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API RESTful desenvolvida em NestJS com TypeORM e PostgreSQL para gerenciamento completo de e-commerce, implementando controle de acesso por papéis (Roles), autenticação JWT, gestão de produtos, pedidos, endereços, pagamentos e categorias.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 1. Configuração do Ambiente
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Executar com Docker
+Crie o arquivo `.env` na raiz do projeto (`loja-api`) a partir do arquivo de exemplo:
 
 ```bash
-docker compose -f docker-compose.postgres.yml up --build
+cp .env.example .env
 ```
 
-Esse comando sobe a API (`http://localhost:3000`), o PostgreSQL e o pgAdmin
-(`http://localhost:5050`). A documentação Swagger fica em
-`http://localhost:3000/api`; a verificação de saúde fica em
-`http://localhost:3000/health`.
+Configurações padrão para o ambiente de laboratório:
 
-Para parar os serviços, mantendo os dados do banco:
-
-```bash
-docker compose -f docker-compose.postgres.yml down
+```env
+PORT=3000
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=loja
+DATABASE_PASS=loja
+DATABASE_NAME=loja
+JWT_SECRET=secret123
 ```
 
-Para apagar também os dados persistidos do banco, use `down -v`.
+---
 
-O Compose usa os valores de `.env` quando disponíveis. Para desenvolvimento
-local, crie esse arquivo a partir do exemplo:
+## 2. Banco de Dados e Seed Oficial
 
+### 2.1 Subir o container PostgreSQL via Docker
 ```bash
-test -f .env || cp .env.example .env
+docker compose -f docker-compose.postgres.yml up -d
 ```
 
-Os valores de JWT incluídos no exemplo e os padrões do Compose são somente
-para desenvolvimento. Configure um `JWT_SECRET` forte antes de qualquer uso
-fora da máquina local.
-
-## Executar localmente
-
-Requer Node.js 20 ou superior e Docker com o plugin Compose.
-
+### 2.2 Sincronização de Tabelas
+Inicie o servidor para que o TypeORM (`synchronize: true`) crie automaticamente todas as tabelas no banco de dados:
 ```bash
-npm ci
-test -f .env || cp .env.example .env
-docker compose -f docker-compose.postgres.yml up -d postgres pgadmin
+npm install
 npm run start:dev
 ```
 
-## Testes e build
-
+### 2.3 Aplicar o Seed Oficial
+Com o container `loja-postgres` ativo e as tabelas criadas, popule a base executando o seed completo:
 ```bash
-npm run test
-npm run test:e2e
-npm run build
+docker exec -i loja-postgres psql -U loja -d loja < seed/seed.sql
 ```
 
-O TypeORM cria/atualiza as tabelas automaticamente durante a inicialização
-(configuração de desenvolvimento). O script `seed/seed.sql` é opcional e deve
-ser executado depois que a API tiver criado as tabelas.
-
-### Usuários do seed
-
-| Papel | Login | Senha |
-|---|---|---|
-| Administrador (`ADMIN`) | `ana` | `secret123` |
-| Cliente (`CLIENT`) | `cli` | `secret123` |
-| Gerente (`MANAGER`) | `mgr` | `secret123` |
-| Visitante | — | Sem cadastro, role ou token; acessa somente rotas públicas |
-
-O seed apaga os dados existentes de pedidos, produtos e usuários antes de
-recriá-los. Execute-o apenas em um banco de desenvolvimento que possa ser
-reinicializado.
-
-### Autenticação
-
-- `GET /auth/me` exige `Authorization: Bearer <access_token>` e retorna
-  `userId`, `username` e `role` do usuário autenticado.
-
-### Busca e atualização de produtos
-
-- `GET /products?q=caneca&minPrice=10&maxPrice=50` filtra produtos cujo nome
-  contém `caneca` e cujo preço está entre `10` e `50` (limites inclusivos;
-  busca sem diferenciar maiúsculas de minúsculas). Todos os filtros são
-  opcionais.
-- `PATCH /products/:id` atualiza somente os campos enviados no JSON e requer
-  token de ADMIN. Por exemplo, `{"stock": 5}` altera apenas o estoque.
-- `PUT /products/:id` continua usando o DTO próprio de atualização.
-- `GET /catalog/summary` retorna a quantidade de produtos e a soma das
-  unidades em estoque, por meio do `CatalogService` que injeta o
-  `ProductsService`.
-- `GET /categories` lista categorias; `POST /categories`, `PUT/PATCH /categories/:id`
-  e `DELETE /categories/:id` fazem o CRUD (escrita só ADMIN).
-- `GET /categories/:id/products` lista produtos da categoria.
-- `PATCH /products/:id/category` recebe `{"categoryId": 1}` para associar uma
-  categoria ou `{"categoryId": null}` para remover a associação (só ADMIN).
-- O papel `MANAGER` pode atualizar produtos via `PUT` e consultar todos os
-  pedidos, mas não pode excluir produtos nem cancelar pedidos de outros
-  usuários. Escritas em `/categories` continuam exclusivas de `ADMIN`.
-- Imagens adicionais de produtos ficam na tabela `product_images`, relacionadas
-  por FK com exclusão em cascata quando o produto é removido. Envie até 5
-  arquivos por requisição em `POST /products/:id/images`, usando o campo
-  multipart `files`. São aceitos JPEG, PNG e WebP, com até 2 MB por arquivo;
-  o MIME declarado e a assinatura do conteúdo são verificados.
-- `GET /products/:id/images` lista os metadados, `GET
-  /products/:id/images/:imageId/file` entrega o arquivo e `DELETE
-  /products/:id/images/:imageId` o remove (ADMIN). O endpoint legado de
-  imagem única (`/products/:id/image`) continua disponível.
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+Verifique a integridade dos dados inseridos:
 ```bash
-$ npm install -g mau
-$ mau deploy
+bash seed/verify-seed.sh
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## 3. Usuários e Papéis do Sistema
 
-Check out a few resources that may come in handy when working with NestJS:
+| Papel | Role | Usuário | Senha | Descrição |
+| :--- | :--- | :--- | :--- | :--- |
+| **Administrador** | `ADMIN` | `ana` | `secret123` | Acesso administrativo total e mutação de categorias/produtos |
+| **Cliente** | `CLIENT` | `cli` | `secret123` | Usuário comum com acesso aos próprios pedidos, endereços e pagamentos |
+| **Gerente** | `MANAGER` | `mgr` | `secret123` | Consulta todos os pedidos e edita produtos (sem exclusão) |
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+* **Documentação Interativa (Swagger):** `http://localhost:3000/api`
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 4. Política de Acesso e Código de Erro
 
-## Stay in touch
+* **Código Adotado:** `403 Forbidden`.
+* **Regra de Domínio:** A aplicação retorna estritamente `403 Forbidden` quando um usuário autenticado tenta visualizar, modificar ou associar recursos de outros usuários (como endereços ou pagamentos alheios).
+* **Restrição de Papel:** Usuários com o papel `MANAGER` podem consultar pedidos (`GET /orders`) e editar dados de produtos (`PUT /products/:id`), mas recebem `403 Forbidden` ao tentar excluir produtos (`DELETE /products/:id`) ou gerenciar categorias.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+---
 
-## License
+## 5. Diagrama de Domínio Geral
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```erDiagram
+    USER ||--o{ ADDRESS : possui
+    USER ||--o{ ORDER : faz
+    ORDER ||--o{ ORDER_ITEM : contem
+    ORDER ||--o| PAYMENT : gera
+    ORDER }--o{ ADDRESS : entrega_em
+    CATEGORY ||--o{ PRODUCT : categoriza
+    PRODUCT ||--o{ ORDER_ITEM : compoe
+```
+
+---
+
+## 6. Endpoints e Exemplos de Execução (CURLs)
+
+### 6.1 Autenticação e Perfis
+Obter tokens com o usuário administrador (`ana`):
+```bash
+LOGIN_RESP=$(curl -s -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "ana", "password": "secret123"}')
+
+ACCESS_TOKEN=$(echo $LOGIN_RESP | grep -o '"access_token":"[^"]*' | cut -d'"' -f4)
+REFRESH_TOKEN=$(echo $LOGIN_RESP | grep -o '"refresh_token":"[^"]*' | cut -d'"' -f4)
+```
+
+Obter perfil autenticado (`GET /auth/me`):
+```bash
+curl -s -X GET http://localhost:3000/auth/me \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+---
+
+### 6.2 Gestão de Endereços (`/addresses`)
+Cadastrar um novo endereço para o usuário logado (`POST /addresses`):
+```bash
+curl -s -X POST http://localhost:3000/addresses \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "street": "Rua das Flores",
+    "number": "123",
+    "city": "Recife",
+    "state": "PE",
+    "zipCode": "50000000"
+  }'
+```
+
+Listar endereços do usuário (`GET /addresses`):
+```bash
+curl -s -X GET http://localhost:3000/addresses \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+---
+
+### 6.3 Gestão de Pagamentos (`/payments`)
+Criar um pagamento simulado para um pedido aberto (`POST /orders/:id/payments`):
+```bash
+curl -s -X POST http://localhost:3000/orders/1/payments \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"method": "PIX"}'
+```
+
+Aprovar um pagamento, alterando seu status para `PAID` e atualizando automaticamente o pedido (`PATCH /payments/:id/status`):
+```bash
+curl -s -X PATCH http://localhost:3000/payments/1/status \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "PAID"}'
+```
+
+---
+
+### 6.4 Gestão de Categorias (`/categories`)
+Listar todas as categorias com seus produtos (`GET /categories`):
+```bash
+curl -s -X GET http://localhost:3000/categories
+```
+
+Criar nova categoria como Administrador (`POST /categories`):
+```bash
+curl -s -X POST http://localhost:3000/categories \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Eletrônicos"}'
+```
+
+---
+
+## 7. Status do Projeto
+
+* [x] **Linha P** (Auth, Products, Orders, Roles, Seed)
+* [x] **Features A dos Capítulos** (Versionamento, Resumo, Busca, PatchProductDto, Auth Me, Refresh Token, Role Manager, Galeria)
+* [x] **Pacote Endereço** (`/addresses` - Completo com isolamento de usuário e segurança 403)
+* [x] **Pacote Pagamento Fake** (`/payments` - Completo com transição de status e atualização automática de pedidos)
+* [x] **Pacote Catálogo Rico / Categorias** (`/categories` - Completo com restrição ADMIN e tratamento de unicidade SQL)
+
+---
+
+## 8. Declaração de Uso de IA e Metodologia de Desenvolvimento
+
+Durante o desenvolvimento deste projeto (em especial na reta final e na estruturação do módulo de Categorias), foram utilizadas ferramentas de IA assistiva (como GitHub Copilot e auxiliares de código) para otimizar o fluxo de trabalho. 
+
+**Como a IA foi utilizada na prática:**
+* **Autocompletamento e Produtividade:** Aceleração na escrita de trechos repetitivos, estruturação de DTOs e mapeamentos básicos.
+* **Resolução de Erros e Imports:** Auxílio pontual no diagnóstico de erros de compilação, sugestão de importações de módulos do NestJS e pequenos *fixes* de tipagem no TypeScript.
+* **Curadoria e Validação Humana:** Todo o código gerado ou sugerido pelas ferramentas passou por revisão manual, testes de comportamento e checagem de integridade para garantir que atendia exatamente às regras de negócio exigidas (como as restrições de permissão `ADMIN` / erro 403 e as relações TypeORM). 
+
+O projeto final reflete uma construção mista, combinando a agilidade de ferramentas assistivas com a validação, lógica e curadoria manual do desenvolvedor.

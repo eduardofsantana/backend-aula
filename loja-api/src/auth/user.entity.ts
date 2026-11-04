@@ -17,4 +17,5 @@ export class User {
   /** CLIENT no register; ADMIN só via seed/SQL — nunca confiar em role no body */
   @Column({ default: 'CLIENT' })
   role: string;
+    addresses: any;
 }

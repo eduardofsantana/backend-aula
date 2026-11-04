@@ -27,6 +27,8 @@ export class Order {
     eager: true,
   })
   items: OrderItem[];
+    address: any;
+    payments: any;
 }
 @Entity('order_items')
 export class OrderItem {

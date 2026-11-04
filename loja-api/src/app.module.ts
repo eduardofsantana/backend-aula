@@ -8,6 +8,10 @@ import { OrdersModule } from './orders/orders.module';
 import { AuthModule } from './auth/auth.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { CategoriesModule } from './categories/categories.module';
+import { AddressesModule } from './addresses/addresses.module';
+import { PaymentsModule } from './payments/payments.module';
+
+
 
 @Module({
   imports: [
@@ -30,6 +34,8 @@ import { CategoriesModule } from './categories/categories.module';
     AuthModule,
     CatalogModule,
     CategoriesModule,
+    PaymentsModule,
+    AddressesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
